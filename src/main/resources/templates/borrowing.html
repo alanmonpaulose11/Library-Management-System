@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Borrowing - Apex Library')}">
+</head>
+<body>
+
+<div th:replace="~{layout :: app-frame('borrowing', ~{::#borrowing-content})}">
+    <div id="borrowing-content">
+        <!-- Page Title Trigger -->
+        <span th:text="Borrowing" class="d-none" id="title-text-hidden"></span>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const targetHeader = document.querySelector("header .page-title");
+                if (targetHeader) {
+                    targetHeader.textContent = "Borrowing & Circulation";
+                }
+            });
+        </script>
+
+        <!-- Quick Action Bar -->
+        <div class="glass-panel p-4 mb-4 d-flex align-items-center justify-content-between">
+            <div>
+                <h4 class="m-0"><i class="bi bi-arrow-left-right text-brand"></i> Circulation Desk</h4>
+                <p class="text-secondary m-0" style="font-size: 13.5px;">Manage checkouts, returns, renewals, and fine collections.</p>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#issue-book-modal">
+                <i class="bi bi-journal-plus"></i> Issue A Book
+            </button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs border-bottom border-glass mb-4" id="circulation-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active bg-transparent text-primary-theme border-0 border-bottom border-brand border-2 fw-semibold px-4 py-2" id="active-borrows-tab" data-bs-toggle="tab" data-bs-target="#active-borrows-pane" type="button" role="tab">
+                    Active Borrows
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link bg-transparent text-secondary border-0 fw-semibold px-4 py-2" id="borrow-history-tab" data-bs-toggle="tab" data-bs-target="#borrow-history-pane" type="button" role="tab">
+                    Return History
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="circulation-tabs-content">
+            <!-- Active Borrows Panel -->
+            <div class="tab-pane fade show active" id="active-borrows-pane" role="tabpanel">
+                <div class="glass-panel p-4">
+                    <div class="table-responsive">
+                        <table class="custom-table" id="active-borrows-table">
+                            <thead>
+                            <tr>
+                                <th>Rec ID</th>
+                                <th>Student Name</th>
+                                <th>Book Title</th>
+                                <th>Issue Date</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="active-borrows-body">
+                            <tr th:each="br : ${activeBorrows}" th:id="'borrow-row-' + ${br.id}">
+                                <td class="font-monospace" th:text="${br.id}">ID</td>
+                                <td class="fw-semibold" th:text="${br.student.name}">Student Name</td>
+                                <td th:text="${br.book.title}">Book Title</td>
+                                <td th:text="${#temporals.format(br.issueDate, 'yyyy-MM-dd')}">Issue Date</td>
+                                <td th:text="${#temporals.format(br.dueDate, 'yyyy-MM-dd')}">Due Date</td>
+                                <td>
+                                    <span th:if="${br.dueDate.isBefore(T(java.time.LocalDate).now())}" class="badge badge-danger">Overdue</span>
+                                    <span th:unless="${br.dueDate.isBefore(T(java.time.LocalDate).now())}" class="badge badge-success">Active</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary btn-sm return-btn" th:data-id="${br.id}" title="Return Book">
+                                            <i class="bi bi-journal-arrow-down"></i> Return
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm renew-btn" th:data-id="${br.id}" title="Renew Book (Extends 7 Days)">
+                                            <i class="bi bi-arrow-repeat"></i> Renew
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(activeBorrows)}" id="no-active-borrows-row">
+                                <td colspan="7" class="text-center text-muted py-4">No active borrowings found.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Return History Panel -->
+            <div class="tab-pane fade" id="borrow-history-pane" role="tabpanel">
+                <div class="glass-panel p-4">
+                    <div class="table-responsive">
+                        <table class="custom-table" id="borrow-history-table">
+                            <thead>
+                            <tr>
+                                <th>Rec ID</th>
+                                <th>Student Name</th>
+                                <th>Book Title</th>
+                                <th>Issue Date</th>
+                                <th>Due Date</th>
+                                <th>Return Date</th>
+                                <th>Fine Detail</th>
+                            </tr>
+                            </thead>
+                            <tbody id="history-borrows-body">
+                            <!-- In-line Thymeleaf rendering for initial display. Updates can use JS fetch API. -->
+                            <!-- Note: To show paid/unpaid fines, we must resolve them from database context. Let's do this dynamically. -->
+                            <!-- For simplicity, we can load this history with an AJAX call or query directly in ViewController, adding details. -->
+                            <tr th:each="br : ${borrowHistory}">
+                                <td class="font-monospace" th:text="${br.id}">ID</td>
+                                <td class="fw-semibold" th:text="${br.student.name}">Student Name</td>
+                                <td th:text="${br.book.title}">Book Title</td>
+                                <td th:text="${#temporals.format(br.issueDate, 'yyyy-MM-dd')}">Issue Date</td>
+                                <td th:text="${#temporals.format(br.dueDate, 'yyyy-MM-dd')}">Due Date</td>
+                                <td th:text="${#temporals.format(br.returnDate, 'yyyy-MM-dd')}">Return Date</td>
+                                <td th:id="'fine-cell-' + ${br.id}">
+                                    <!-- Look up fine info dynamically. We will hook this up in JS. -->
+                                    <span class="text-muted" style="font-size: 13px;">Checking...</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(borrowHistory)}" id="no-history-row">
+                                <td colspan="7" class="text-center text-muted py-4">No completed borrowing records found.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issue Book Modal -->
+        <div class="modal fade" id="issue-book-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-panel">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-box-arrow-up-right text-brand"></i> Issue Book to Student</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="issue-book-form">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="issue-student" class="form-label">Select Student</label>
+                                <select class="form-select" id="issue-student" required>
+                                    <option value="" disabled selected>Choose a student...</option>
+                                    <option th:each="student : ${students}" th:value="${student.id}" th:text="${student.name + ' (' + student.email + ')'}"></option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="issue-book" class="form-label">Select Book</label>
+                                <select class="form-select" id="issue-book" required>
+                                    <option value="" disabled selected>Choose a book...</option>
+                                    <option th:each="book : ${books}" 
+                                            th:value="${book.id}" 
+                                            th:disabled="${book.availableQuantity <= 0}"
+                                            th:text="${book.title + ' (Available: ' + book.availableQuantity + ' / ' + book.quantity + ')'}"></option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="issue-days" class="form-label">Borrow Duration (Days)</label>
+                                <select class="form-select" id="issue-days" required>
+                                    <option value="7">7 Days</option>
+                                    <option value="14" selected>14 Days</option>
+                                    <option value="21">21 Days</option>
+                                    <option value="30">30 Days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Confirm Issue</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Borrowing Page JS Controller -->
+<script th:src="@{/js/borrowing.js}" defer></script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Students - Apex Library')}">
+</head>
+<body>
+
+<div th:replace="~{layout :: app-frame('students', ~{::#students-content})}">
+    <div id="students-content">
+        <!-- Page Title Trigger -->
+        <span th:text="Students" class="d-none" id="title-text-hidden"></span>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const targetHeader = document.querySelector("header .page-title");
+                if (targetHeader) {
+                    targetHeader.textContent = "Students Database";
+                }
+            });
+        </script>
+
+        <!-- Search and Action Bar -->
+        <div class="glass-panel p-4 mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-6 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0 border-glass"><i class="bi bi-search text-secondary"></i></span>
+                        <input type="text" id="student-search-input" class="form-control border-start-0" placeholder="Search by name, email, department, phone...">
+                    </div>
+                </div>
+
+                <div class="col-lg-4 text-md-end text-start ms-auto">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-student-modal">
+                        <i class="bi bi-person-plus-fill"></i> Add New Student
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Students Table Card -->
+        <div class="glass-panel p-4">
+            <div class="table-responsive">
+                <table class="custom-table" id="students-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="students-table-body">
+                    <tr th:each="student : ${students}" th:id="'student-row-' + ${student.id}">
+                        <td class="font-monospace" th:text="${student.id}">ID</td>
+                        <td class="fw-semibold text-primary-theme" th:text="${student.name}">Name</td>
+                        <td th:text="${student.email}">Email</td>
+                        <td th:text="${student.phone}">Phone</td>
+                        <td th:text="${student.department}">Department</td>
+                        <td><span class="badge badge-info" th:text="${student.year}">Year</span></td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-secondary btn-sm p-1 px-2 view-history-btn" th:data-id="${student.id}" th:data-name="${student.name}" title="View Borrow History">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
+                                <button class="btn btn-secondary btn-sm p-1 px-2 edit-student-btn" th:data-id="${student.id}" title="Edit student">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button class="btn btn-secondary btn-sm p-1 px-2 text-danger delete-student-btn" th:data-id="${student.id}" title="Delete student">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(students)}" id="no-students-row">
+                        <td colspan="7" class="text-center text-muted py-4">No students registered in the database.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Student Modal -->
+        <div class="modal fade" id="add-student-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-panel">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Register Student</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="add-student-form">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="add-stud-name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="add-stud-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="add-stud-email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="add-stud-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="add-stud-phone" class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="add-stud-phone" required>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-8 mb-3">
+                                    <label for="add-stud-dept" class="form-label">Department</label>
+                                    <input type="text" class="form-control" id="add-stud-dept" placeholder="e.g. Computer Science" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="add-stud-year" class="form-label">Year</label>
+                                    <select class="form-select" id="add-stud-year" required>
+                                        <option value="1st Year">1st Year</option>
+                                        <option value="2nd Year">2nd Year</option>
+                                        <option value="3rd Year">3rd Year</option>
+                                        <option value="4th Year">4th Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Student</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Student Modal -->
+        <div class="modal fade" id="edit-student-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-panel">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Student Profile</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="edit-student-form">
+                        <input type="hidden" id="edit-student-id">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="edit-stud-name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="edit-stud-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-stud-email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="edit-stud-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-stud-phone" class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="edit-stud-phone" required>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-8 mb-3">
+                                    <label for="edit-stud-dept" class="form-label">Department</label>
+                                    <input type="text" class="form-control" id="edit-stud-dept" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit-stud-year" class="form-label">Year</label>
+                                    <select class="form-select" id="edit-stud-year" required>
+                                        <option value="1st Year">1st Year</option>
+                                        <option value="2nd Year">2nd Year</option>
+                                        <option value="3rd Year">3rd Year</option>
+                                        <option value="4th Year">4th Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Student</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Borrow History Modal -->
+        <div class="modal fade" id="history-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content glass-panel">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-clock-history text-brand"></i> Borrowing Log: <span id="history-student-name">Student</span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="custom-table table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Issue Date</th>
+                                    <th>Due Date</th>
+                                    <th>Returned On</th>
+                                    <th>Fine Status</th>
+                                </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                <!-- Dynamically populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Students JavaScript Controller -->
+<script th:src="@{/js/students.js}" defer></script>
+</body>
+</html>

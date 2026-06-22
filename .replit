@@ -1,0 +1,10 @@
+modules = ["java-17"]
+run = "bash run.sh"
+
+[nix]
+channel = "stable-23_11"
+
+[ports]
+  [ports.web]
+  localPort = 8080
+  externalPort = 80

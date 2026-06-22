@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Reports - Apex Library')}">
+</head>
+<body>
+
+<div th:replace="~{layout :: app-frame('reports', ~{::#reports-content})}">
+    <div id="reports-content">
+        <!-- Page Title Trigger -->
+        <span th:text="Reports" class="d-none" id="title-text-hidden"></span>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const targetHeader = document.querySelector("header .page-title");
+                if (targetHeader) {
+                    targetHeader.textContent = "Library Reports & Analytics";
+                }
+            });
+        </script>
+
+        <!-- Export Action Panel -->
+        <div class="glass-panel p-4 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h4 class="m-0"><i class="bi bi-file-earmark-bar-graph text-brand"></i> Data Export Center</h4>
+                <p class="text-secondary m-0" style="font-size: 13.5px;">Download physical spreadsheet sheets and documents of library state details.</p>
+            </div>
+            
+            <div class="d-flex gap-3">
+                <a th:href="@{/api/reports/export/excel}" class="btn btn-secondary text-primary-theme">
+                    <i class="bi bi-file-earmark-excel text-success"></i> Export to Excel
+                </a>
+                <a th:href="@{/api/reports/export/pdf}" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-pdf"></i> Export to PDF
+                </a>
+            </div>
+        </div>
+
+        <!-- Grid of Analysis Tables -->
+        <div class="row g-4 mb-4">
+            <!-- Popular Books -->
+            <div class="col-lg-6">
+                <div class="glass-panel p-4 h-100">
+                    <h4 class="mb-3"><i class="bi bi-star-fill text-warning"></i> Most Borrowed Books</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Book Title</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th class="text-center">Times Borrowed</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${popularBooks}">
+                                <td class="fw-semibold" th:text="${item.book.title}">Title</td>
+                                <td th:text="${item.book.author}">Author</td>
+                                <td><span class="badge badge-brand" th:text="${item.book.category}">Category</span></td>
+                                <td class="text-center fw-bold text-primary-theme" th:text="${item.borrowCount}">0</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(popularBooks)}">
+                                <td colspan="4" class="text-center text-muted py-4">No borrow records available for aggregation.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Students -->
+            <div class="col-lg-6">
+                <div class="glass-panel p-4 h-100">
+                    <h4 class="mb-3"><i class="bi bi-award-fill text-info"></i> Most Active Students</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table table-sm">
+                            <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Email Address</th>
+                                <th>Department</th>
+                                <th class="text-center">Books Borrowed</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${activeStudents}">
+                                <td class="fw-semibold" th:text="${item.student.name}">Name</td>
+                                <td th:text="${item.student.email}">Email</td>
+                                <td th:text="${item.student.department}">Dept</td>
+                                <td class="text-center fw-bold text-primary-theme" th:text="${item.borrowCount}">0</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(activeStudents)}">
+                                <td colspan="4" class="text-center text-muted py-4">No student checkout logs available.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly borrowing statistics -->
+        <div class="glass-panel p-4">
+            <h4 class="mb-3"><i class="bi bi-calendar-event text-brand"></i> Monthly Borrow Statistics</h4>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Total Borrows Recorded</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${monthlyStats}">
+                        <td class="font-monospace fw-semibold" th:text="${entry.key}">2026-06</td>
+                        <td class="fw-bold text-brand" th:text="${entry.value}">0</td>
+                    </tr>
+                    <tr th:if="${#maps.isEmpty(monthlyStats)}">
+                        <td colspan="2" class="text-center text-muted py-4">No monthly circulation data recorded.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

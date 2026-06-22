@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Apex Library</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Global JS -->
+    <script th:src="@{/js/app.js}" defer></script>
+</head>
+<body class="auth-container">
+
+<div class="auth-card glass-panel">
+    <div class="brand">
+        <i class="bi bi-book-half"></i>
+        <h2>Apex Library</h2>
+        <p>Create a new account</p>
+    </div>
+
+    <!-- Alert Messages (dynamically handled by script) -->
+    <div id="alert-box" class="alert d-none align-items-center gap-2 border-0 mb-3" style="font-size: 13.5px; border-radius: var(--radius-sm);">
+        <i id="alert-icon" class="bi"></i>
+        <span id="alert-message">Alert message</span>
+    </div>
+
+    <form id="register-form">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0 border-glass"><i class="bi bi-person text-secondary"></i></span>
+                <input type="text" class="form-control border-start-0" id="username" name="username" placeholder="Username" required minlength="3" maxlength="50">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0 border-glass"><i class="bi bi-envelope text-secondary"></i></span>
+                <input type="email" class="form-control border-start-0" id="email" name="email" placeholder="email@example.com" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0 border-glass"><i class="bi bi-lock text-secondary"></i></span>
+                <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="Password (min 6 chars)" required minlength="6">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="role" class="form-label">Account Role</label>
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0 border-glass"><i class="bi bi-shield-lock text-secondary"></i></span>
+                <select class="form-select border-start-0" id="role" name="role" required>
+                    <option value="student" selected>Student</option>
+                    <option value="librarian">Librarian</option>
+                    <option value="admin">Administrator</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 justify-content-center mb-3" id="submit-btn">
+            <i class="bi bi-person-plus"></i> Register
+        </button>
+
+        <div class="text-center">
+            <span class="text-secondary" style="font-size: 13.5px;">Already have an account? </span>
+            <a th:href="@{/login}" class="text-decoration-none fw-semibold" style="color: var(--color-brand); font-size: 13.5px;">Sign in here</a>
+        </div>
+    </form>
+</div>
+
+<!-- Register AJAX Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("register-form");
+        const alertBox = document.getElementById("alert-box");
+        const alertIcon = document.getElementById("alert-icon");
+        const alertMessage = document.getElementById("alert-message");
+        const submitBtn = document.getElementById("submit-btn");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            // Disable button during call
+            submitBtn.disabled = true;
+            alertBox.className = "alert d-none";
+
+            const username = document.getElementById("username").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const role = document.getElementById("role").value;
+
+            try {
+                const response = await fetch("/api/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, email, password, role })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success!
+                    alertBox.className = "alert alert-success d-flex align-items-center gap-2 border-0 bg-success-subtle text-success mb-3";
+                    alertIcon.className = "bi bi-check-circle-fill";
+                    alertMessage.textContent = "Registration successful! Redirecting to login page...";
+                    
+                    form.reset();
+
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 2000);
+                } else {
+                    // Display API Error
+                    throw new Error(data.error || "Registration failed. Please check inputs.");
+                }
+            } catch (err) {
+                alertBox.className = "alert alert-danger d-flex align-items-center gap-2 border-0 bg-danger-subtle text-danger mb-3";
+                alertIcon.className = "bi bi-exclamation-triangle-fill";
+                alertMessage.textContent = err.message;
+                submitBtn.disabled = false;
+            }
+        });
+    });
+</script>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

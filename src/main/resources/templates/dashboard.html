@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head('Dashboard - Apex Library')}">
+</head>
+<body>
+
+<div th:replace="~{layout :: app-frame('dashboard', ~{::#dashboard-content})}">
+    <div id="dashboard-content">
+        <!-- Dashboard Header text (used by frame) -->
+        <span th:text="Dashboard" class="d-none" id="title-text-hidden"></span>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const titleNode = document.getElementById("title-text-hidden");
+                const targetHeader = document.querySelector("header .page-title");
+                if (titleNode && targetHeader) {
+                    targetHeader.textContent = "Dashboard Overview";
+                }
+            });
+        </script>
+
+        <!-- Welcome Info -->
+        <div class="glass-panel p-4 mb-4 d-flex align-items-center justify-content-between">
+            <div>
+                <h3 class="m-0 mb-1" th:text="${'Welcome back, ' + username + '!'}">Welcome back, User!</h3>
+                <p class="text-secondary m-0" style="font-size: 14.5px;">Here is what's happening at your library today.</p>
+            </div>
+            <div class="d-flex gap-2" sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_LIBRARIAN')">
+                <a th:href="@{/books}" class="btn btn-secondary"><i class="bi bi-journal-plus"></i> Manage Books</a>
+                <a th:href="@{/borrowing}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Issue Book</a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards Grid -->
+        <div class="stats-grid mb-4">
+            <div class="glass-panel stat-card brand">
+                <div class="header-row">
+                    <span class="title">Total Books</span>
+                    <div class="icon-wrapper"><i class="bi bi-journal-album"></i></div>
+                </div>
+                <div class="value" th:text="${totalBooks}">0</div>
+            </div>
+
+            <div class="glass-panel stat-card success">
+                <div class="header-row">
+                    <span class="title">Available Books</span>
+                    <div class="icon-wrapper"><i class="bi bi-journal-check"></i></div>
+                </div>
+                <div class="value" th:text="${availableBooks}">0</div>
+            </div>
+
+            <div class="glass-panel stat-card info">
+                <div class="header-row">
+                    <span class="title">Issued Books</span>
+                    <div class="icon-wrapper"><i class="bi bi-journal-arrow-up"></i></div>
+                </div>
+                <div class="value" th:text="${issuedBooks}">0</div>
+            </div>
+
+            <div class="glass-panel stat-card warning">
+                <div class="header-row">
+                    <span class="title">Total Students</span>
+                    <div class="icon-wrapper"><i class="bi bi-people"></i></div>
+                </div>
+                <div class="value" th:text="${totalStudents}">0</div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Side: Overdue & Fines info -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="stats-grid mb-4" style="grid-template-columns: 1fr;">
+                    <div class="glass-panel stat-card danger">
+                        <div class="header-row">
+                            <span class="title">Overdue Borrows</span>
+                            <div class="icon-wrapper"><i class="bi bi-calendar-x"></i></div>
+                        </div>
+                        <div class="value" th:text="${overdueBooks}">0</div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4 h-100">
+                    <h4 class="mb-3"><i class="bi bi-currency-dollar text-brand"></i> Fines Collection</h4>
+                    
+                    <div class="d-flex flex-column gap-3 mt-4">
+                        <div class="d-flex justify-content-between align-items-center pb-2 border-bottom border-glass">
+                            <span class="text-secondary" style="font-size: 14.5px;">Paid Fines</span>
+                            <span class="badge badge-success fw-bold fs-6" th:text="${'$' + #numbers.formatDecimal(paidFines, 1, 2)}">$0.00</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center pb-2 border-bottom border-glass">
+                            <span class="text-secondary" style="font-size: 14.5px;">Outstanding Fines</span>
+                            <span class="badge badge-danger fw-bold fs-6" th:text="${'$' + #numbers.formatDecimal(unpaidFines, 1, 2)}">$0.00</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2">
+                            <span class="fw-bold" style="font-size: 15px;">Total Fine Amount</span>
+                            <span class="badge badge-brand fw-bold fs-5" th:text="${'$' + #numbers.formatDecimal(totalFines, 1, 2)}">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Active Borrows Table -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="glass-panel p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="m-0"><i class="bi bi-clock-history text-brand"></i> Urgent Borrows</h4>
+                        <a th:href="@{/borrowing}" class="text-decoration-none fw-semibold" style="font-size: 13.5px;" sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_LIBRARIAN')">View All</a>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Book Title</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="br : ${activeBorrows}" th:if="${brStat.index < 5}">
+                                <td th:text="${br.student.name}">Student</td>
+                                <td th:text="${br.book.title}">Book Title</td>
+                                <td th:text="${#temporals.format(br.dueDate, 'yyyy-MM-dd')}">Due Date</td>
+                                <td>
+                                    <span th:if="${br.dueDate.isBefore(T(java.time.LocalDate).now())}" class="badge badge-danger">Overdue</span>
+                                    <span th:unless="${br.dueDate.isBefore(T(java.time.LocalDate).now())}" class="badge badge-success">OK</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(activeBorrows)}">
+                                <td colspan="4" class="text-center text-muted py-4">No active borrowings found.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
